@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Matrix Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/alpinejs" defer></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+<div x-data="chatApp()" class="bg-white p-6 rounded shadow-md w-[700px] h-[600px]">
+  
+  <!-- Форма логіну -->
+  <template x-if="!accessToken">
+    <div>
+      <h2 class="text-2xl font-extrabold mb-6 text-blue-700 text-center">🔐 Авторизація</h2>
+      <input x-model="username" placeholder="Username"
+             class="border p-2 w-full mb-3 rounded focus:ring-2 focus:ring-blue-400" />
+      <input x-model="password" type="password" placeholder="Password"
+             class="border p-2 w-full mb-3 rounded focus:ring-2 focus:ring-blue-400" />
+      <button @click="login()" 
+              class="bg-blue-500 hover:bg-blue-600 text-white font-semibold p-2 w-full rounded shadow transition">
+        Увійти
+      </button>
+      <p x-text="error" class="text-red-500 mt-3 text-center font-medium"></p>
+    </div>
+  </template>
+
+  <!-- Панель після успішного входу -->
+  <template x-if="accessToken">
+    <div class="flex flex-col h-full bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg shadow-lg">
+      <h1 class="text-2xl font-extrabold mb-6 text-blue-700 text-center">
+        🎉 Ви успішно авторизувались!
+      </h1>
+      
+      <!-- User ID -->
+      <div class="mb-4 p-3 bg-white border border-gray-300 rounded-lg text-sm break-words shadow">
+        <span class="font-bold text-gray-700">Ваш Matrix ID:</span>
+        <span class="ml-2 text-blue-600 font-mono" x-text="userId ? userId : 'Завантаження...'"></span>
+      </div>
+
+      <!-- Resume --> 
+      <div class="mt-4 p-5 bg-white rounded-lg shadow border border-gray-200">
+        <h2 class="text-lg font-bold mb-3 text-gray-800">📄 Моє резюме</h2>
+        <ul class="space-y-1 text-gray-700">
+          <li><span class="font-semibold">Ім’я:</span> Катерина </li>
+          <li><span class="font-semibold">Освіта:</span> Курсант КПІ, спеціальність 122 – Комп’ютерні науки</li>
+          <li><span class="font-semibold">Інтереси:</span> подорожі музика</li>
+          <li><span class="font-semibold">Проєкти:</span> сайт-портфоліо, PWA та Java-додатки</li>
+        </ul>
+      </div>
+
+      <!-- Logout button -->
+      <button @click="accessToken='', userId=''" 
+              class="mt-6 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+        🚪 Вийти
+      </button>
+    </div>
+  </template>
+
+</div>
+
+<script>
+function chatApp() {
+  return {
+    username: '',
+    password: '',
+    accessToken: '',
+    error: '',
+    userId: '',
+    async login() {
+      try {
+        const res = await fetch('https://matrix.org/_matrix/client/r0/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            type: 'm.login.password', 
+            user: this.username, 
+            password: this.password 
+          })
+        });
+        const data = await res.json();
+        if (data.access_token) {
+          this.accessToken = data.access_token;
+          this.userId = data.user_id;
+          this.error = '';
+        } else {
+          this.error = 'Невірний логін або пароль';
+        }
+      } catch(e) {
+        this.error = 'Помилка під час входу';
+        console.error(e);
+      }
+    }
+  }
+}
+</script>
+
+</body>
+</html>
+
+
